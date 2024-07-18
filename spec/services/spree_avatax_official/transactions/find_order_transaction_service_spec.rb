@@ -19,6 +19,10 @@ describe SpreeAvataxOfficial::Transactions::FindOrderTransactionService, :avatax
 
       context 'when order does NOT have a SalesInvoice transaction', :vcr do
         context 'when transaction exists in avatax' do
+          before do
+            allow(SpreeAvataxOfficial::Transactions::GetByCodeService).to receive(:call).and_return double(failure?: false)
+          end
+
           it 'returns success and creates a new SalesInvoice transaction' do
             expect(subject.success?).to eq true
             expect(SpreeAvataxOfficial::Transaction.count).to eq 1
@@ -26,9 +30,11 @@ describe SpreeAvataxOfficial::Transactions::FindOrderTransactionService, :avatax
         end
 
         context 'when transaction does NOT exist in avatax' do
-          it 'returns failure' do
-            order.update(number: 'not-existing-number')
+          before do
+            allow(SpreeAvataxOfficial::Transactions::GetByCodeService).to receive(:call).and_return double(failure?: true)
+          end
 
+          it 'returns failure' do
             expect(subject.success?).to eq false
           end
         end
